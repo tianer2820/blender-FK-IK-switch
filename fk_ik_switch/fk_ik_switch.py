@@ -5,66 +5,27 @@ from math import *
 
 from typing import List, Set
 
+
+"""
+Blender Addon Info
+"""
+bl_info = {
+    "name": "FK/IK Switch",
+    "author": "tianer2820",
+    "version": (0, 1),
+    "blender": (2, 80, 0),
+    "location": "View3D > Pose Mode Side Panel > FK/IK Switch",
+    "description": "Switch on/off IK constraints while keeping bones in-place",
+    "warning": "",
+    "support": "COMMUNITY",
+    "doc_url": "https://github.com/tianer2820/blender-FK-IK-switch",
+    "category": "Animation",
+}
+
+
 """
 utility functions
 """
-def ik2fk(context: bpy.types.Context, operator: bpy.types.Operator, add_keyframe: bool) -> Set[str]:
-    obj = context.view_layer.objects.active
-    if obj is None:
-        operator.report({'OPERATOR'}, 'No object selected')
-        return {"CANCELLED"}
-    pose = obj.pose
-    if pose is None:
-        operator.report({'OPERATOR'}, 'Active object does not have pose data')
-        return {"CANCELLED"}
-    pose: bpy.types.Pose
-
-    bones = selected_bones(obj)
-
-    if bones is None:
-        operator.report({'OPERATOR'}, 'No bone selected')
-        return {"CANCELLED"}
-    bones = bones.copy()
-
-    ik_bones: List[bpy.types.PoseBone] = []
-    ik_constraints = []
-    for bone in bones:
-        # detect IK head
-        constraints = bone.constraints
-        for constraint in constraints:
-            constraint: bpy.types.Constraint
-            if constraint.type == 'IK':
-                # is a ik head
-                constraint: bpy.types.KinematicConstraint
-                chain_length = constraint.chain_count
-                chain = follow_bone_chain(bone, chain_length)
-                ik_bones.extend(chain)
-                ik_constraints.append(constraint)
-    
-    # apply pose and select affected bones
-    bpy.ops.pose.select_all(action='DESELECT')
-    for bone in ik_bones:
-        bone: bpy.types.PoseBone
-        converted = obj.convert_space(pose_bone=bone, matrix=bone.matrix, from_space='POSE', to_space='LOCAL')
-        bone.bone.select = True
-        current_frame = context.scene.frame_current
-        if add_keyframe:
-            bone.keyframe_insert('rotation_quaternion', frame=current_frame - 1, group='FKIK Pose')
-        bone.matrix_basis = converted
-        if add_keyframe:
-            bone.keyframe_insert('rotation_quaternion', frame=current_frame, group='FKIK Pose')
-    
-    # change constrint weight
-    for constraint in ik_constraints:
-        current_frame = context.scene.frame_current
-        if add_keyframe:
-            constraint.keyframe_insert('influence', frame=current_frame - 1, group='IK Weight')
-        constraint.influence = 0
-        if add_keyframe:
-            constraint.keyframe_insert('influence', frame=current_frame, group='IK Weight')
-    
-    return {'FINISHED'}
-
 
 def follow_bone_chain(bone: bpy.types.PoseBone, count: int) -> List[bpy.types.PoseBone]:
     chain = []
@@ -92,22 +53,10 @@ def selected_bones(object: bpy.types.Object) -> List[bpy.types.PoseBone]:
             bones.append(p_bone)
     return bones
 
-"""
-Blender Addon Interface
-"""
-bl_info = {
-    "name": "FK/IK Switch",
-    "author": "tianer2820",
-    "version": (0, 1),
-    "blender": (2, 80, 0),
-    "location": "View3D > Pose Mode Side Panel > FK/IK Switch",
-    "description": "Switch on/off IK constraints while keeping bones in-place",
-    "warning": "",
-    "support": "COMMUNITY",
-    "doc_url": "https://github.com/tianer2820/blender-FK-IK-switch",
-    "category": "Animation",
-}
 
+"""
+Operators
+"""
 
 class ToggleFKIK(bpy.types.Operator):
     """Switch IK on/off"""
@@ -131,14 +80,14 @@ class ToggleFKIK(bpy.types.Operator):
         default=True)
 
     @classmethod
-    def poll(cls, context: bpy.types.Context):
+    def poll(cls, context: bpy.types.Context) -> bool:
         obj = context.view_layer.objects.active
         return (obj is not None) and\
             (obj.pose is not None) and\
             len(selected_bones(obj)) > 0 and\
             context.mode == 'POSE'
 
-    def execute(self, context):
+    def execute(self, context: bpy.types.Context):
         if self.action == 'TOGGLE':
             self.report({'ERROR'}, 'Toggle is unimplemented yet')
             return {'CANCELLED'}
@@ -146,12 +95,70 @@ class ToggleFKIK(bpy.types.Operator):
             self.report({'ERROR'}, 'FK2IK is unimplemented yet')
             return {'CANCELLED'}
         elif self.action == 'IK2FK':
-            return ik2fk(context, self, self.insert_keyframe)
+            return self.ik2fk(context)
         else:
             self.report({'ERROR'}, "Unknown action type: {}".format(self.action))
             return {'CANCELLED'}
+    
+    def ik2fk(self, context: bpy.types.Context) -> Set[str]:
+        obj = context.view_layer.objects.active
+        if obj is None:
+            self.report({'OPERATOR'}, 'No object selected')
+            return {"CANCELLED"}
+        pose = obj.pose
+        if pose is None:
+            self.report({'OPERATOR'}, 'Active object does not have pose data')
+            return {"CANCELLED"}
+        pose: bpy.types.Pose
 
+        bones = selected_bones(obj)
+        if bones is None:
+            self.report({'OPERATOR'}, 'No bone selected')
+            return {"CANCELLED"}
+        bones = bones.copy()
 
+        ik_bones: List[bpy.types.PoseBone] = []
+        ik_constraints = []
+        for bone in bones:
+            # detect IK head
+            constraints = bone.constraints
+            for constraint in constraints:
+                constraint: bpy.types.Constraint
+                if constraint.type == 'IK':
+                    # is a ik head
+                    constraint: bpy.types.KinematicConstraint
+                    chain_length = constraint.chain_count
+                    chain = follow_bone_chain(bone, chain_length)
+                    ik_bones.extend(chain)
+                    ik_constraints.append(constraint)
+        
+        # apply pose and select affected bones
+        bpy.ops.pose.select_all(action='DESELECT')
+        for bone in ik_bones:
+            bone: bpy.types.PoseBone
+            converted = obj.convert_space(pose_bone=bone, matrix=bone.matrix, from_space='POSE', to_space='LOCAL')
+            bone.bone.select = True
+            current_frame = context.scene.frame_current
+            if self.insert_keyframe:
+                bone.keyframe_insert('rotation_quaternion', frame=current_frame - 1, group='FKIK Pose')
+            bone.matrix_basis = converted
+            if self.insert_keyframe:
+                bone.keyframe_insert('rotation_quaternion', frame=current_frame, group='FKIK Pose')
+        
+        # change constrint weight
+        for constraint in ik_constraints:
+            current_frame = context.scene.frame_current
+            if self.insert_keyframe:
+                constraint.keyframe_insert('influence', frame=current_frame - 1, group='IK Weight')
+            constraint.influence = 0
+            if self.insert_keyframe:
+                constraint.keyframe_insert('influence', frame=current_frame, group='IK Weight')
+        
+        return {'FINISHED'}
+
+"""
+UIs
+"""
 class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -159,7 +166,7 @@ class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
     bl_label = "FK/IK Switch"
 
     @classmethod
-    def poll(cls, context: bpy.types.Context):
+    def poll(cls, context: bpy.types.Context) -> bool:
         return context.mode == 'POSE'
 
     def draw(self, context: bpy.types.Context):
@@ -171,7 +178,10 @@ class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
         props = layout.operator(ToggleFKIK.bl_idname, text="IK->FK")
         props.action = 'IK2FK'
 
-# Register and add to the "object" menu (required to also use F3 search "Simple Object Operator" for quick access)
+
+"""
+Register/Unregister functions
+"""
 def register():
     bpy.utils.register_class(ToggleFKIK)
     bpy.utils.register_class(VIEW3D_PT_animation_fkik_switch)
