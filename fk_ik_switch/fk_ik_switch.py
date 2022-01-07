@@ -103,7 +103,8 @@ bl_info = {
     "location": "View3D > Pose Mode Side Panel > FK/IK Switch",
     "description": "Switch on/off IK constraints while keeping bones in-place",
     "warning": "",
-    "doc_url": "",
+    "support": "COMMUNITY",
+    "doc_url": "https://github.com/tianer2820/blender-FK-IK-switch",
     "category": "Animation",
 }
 
