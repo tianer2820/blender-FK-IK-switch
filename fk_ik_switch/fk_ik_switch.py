@@ -171,7 +171,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ToggleFKIK)
-    bpy.utils.register_class(VIEW3D_PT_animation_fkik_switch)
+    bpy.utils.unregister_class(VIEW3D_PT_animation_fkik_switch)
 
     # bpy.types.VIEW3D_MT_object.remove(menu_func)
 
