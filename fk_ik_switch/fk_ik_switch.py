@@ -139,11 +139,11 @@ class ToggleFKIK(bpy.types.Operator):
 
     def execute(self, context):
         if self.action == 'TOGGLE':
-            pass
-            return {'FINISHED'}
+            self.report({'ERROR'}, 'Toggle is unimplemented yet')
+            return {'CANCELLED'}
         elif self.action == 'FK2IK':
-            pass
-            return {'FINISHED'}
+            self.report({'ERROR'}, 'FK2IK is unimplemented yet')
+            return {'CANCELLED'}
         elif self.action == 'IK2FK':
             return ik2fk(context, self, self.insert_keyframe)
         else:
