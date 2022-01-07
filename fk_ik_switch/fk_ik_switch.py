@@ -167,10 +167,10 @@ class ToggleFKIK(bpy.types.Operator):
                 pose_bone=bone, matrix=bone.matrix, from_space='POSE', to_space='LOCAL')
             current_frame = context.scene.frame_current
             if self.insert_keyframe:
-                bone.keyframe_insert('rotation_quaternion', frame=current_frame - 1)
+                bone.keyframe_insert('rotation_quaternion', frame=current_frame - 1, group=bone.name)
             bone.matrix_basis = converted
             if self.insert_keyframe:
-                bone.keyframe_insert('rotation_quaternion', frame=current_frame)
+                bone.keyframe_insert('rotation_quaternion', frame=current_frame, group=bone.name)
 
         # change constrint influence
         for constraint in ik_constraints:
@@ -236,20 +236,20 @@ class ToggleFKIK(bpy.types.Operator):
                     converted = chain.pole.convert_space(matrix=world_mat,
                                                          from_space='WORLD', to_space='LOCAL')
                     if self.insert_keyframe:
-                        chain.target.keyframe_insert('location', frame=current_frame - 1)
+                        chain.target.keyframe_insert('location', frame=current_frame - 1, group='Object Transforms')
                     chain.pole.location = converted.translation
                     if self.insert_keyframe:
-                        chain.target.keyframe_insert('location', frame=current_frame)
+                        chain.target.keyframe_insert('location', frame=current_frame, group='Object Transforms')
                 else:
                     # for bone target
                     converted = chain.pole.convert_space(pose_bone=chain.subpole,
                                                          matrix=world_mat,
                                                          from_space='WORLD', to_space='LOCAL')
                     if self.insert_keyframe:
-                        chain.subtarget.keyframe_insert('location', frame=current_frame - 1)
+                        chain.subtarget.keyframe_insert('location', frame=current_frame - 1, group=chain.subtarget.name)
                     chain.subpole.location = converted.translation
                     if self.insert_keyframe:
-                        chain.subtarget.keyframe_insert('location', frame=current_frame)
+                        chain.subtarget.keyframe_insert('location', frame=current_frame, group=chain.subtarget.name)
             
             # set target object location
             if chain.target is not None:
@@ -260,20 +260,20 @@ class ToggleFKIK(bpy.types.Operator):
                     converted = chain.target.convert_space(matrix=world_mat,
                                                          from_space='WORLD', to_space='LOCAL')
                     if self.insert_keyframe:
-                        chain.target.keyframe_insert('location', frame=current_frame - 1)
+                        chain.target.keyframe_insert('location', frame=current_frame - 1, group='Object Transforms')
                     chain.target.location = converted.translation
                     if self.insert_keyframe:
-                        chain.target.keyframe_insert('location', frame=current_frame)
+                        chain.target.keyframe_insert('location', frame=current_frame, group='Object Transforms')
                 else:
                     # for bone target
                     converted = chain.target.convert_space(pose_bone=chain.subtarget,
                                                          matrix=world_mat,
                                                          from_space='WORLD', to_space='LOCAL')
                     if self.insert_keyframe:
-                        chain.subtarget.keyframe_insert('location', frame=current_frame - 1)
+                        chain.subtarget.keyframe_insert('location', frame=current_frame - 1, group=chain.subtarget.name)
                     chain.subtarget.location = converted.translation
                     if self.insert_keyframe:
-                        chain.subtarget.keyframe_insert('location', frame=current_frame)
+                        chain.subtarget.keyframe_insert('location', frame=current_frame, group=chain.subtarget.name)
             # change constraint influence
             if self.insert_keyframe:
                 chain.constraint.keyframe_insert('influence', frame=current_frame - 1, group='IK Weight')
@@ -283,10 +283,10 @@ class ToggleFKIK(bpy.types.Operator):
             # clear bone pose
             for bone in chain.bones:
                 if self.insert_keyframe:
-                    bone.keyframe_insert('rotation_quaternion', frame=current_frame - 1)
+                    bone.keyframe_insert('rotation_quaternion', frame=current_frame - 1, group=bone.name)
                 bone.rotation_quaternion = Quaternion()
                 if self.insert_keyframe:
-                    bone.keyframe_insert('rotation_quaternion', frame=current_frame)
+                    bone.keyframe_insert('rotation_quaternion', frame=current_frame, group=bone.name)
 
         return {'FINISHED'}
 
