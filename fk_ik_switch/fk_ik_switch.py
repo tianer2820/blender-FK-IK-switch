@@ -34,10 +34,11 @@ def follow_bone_chain(bone: bpy.types.PoseBone, count: int) -> List[bpy.types.Po
     while not current is None:
         chain.append(current)
         i += 1
-        current = current.parent
+        if not current.bone.use_connect:
+            break
         if count != 0 and i >= count:
             break
-        print(current)
+        current = current.parent
     return chain
 
 
