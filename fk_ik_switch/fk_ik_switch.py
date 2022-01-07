@@ -1,6 +1,5 @@
 import bpy
 from bpy import data as D
-# from bpy import context as C
 from mathutils import *
 from math import *
 
@@ -10,8 +9,6 @@ from typing import List, Set
 utility functions
 """
 def ik2fk(context: bpy.types.Context, operator: bpy.types.Operator, add_keyframe: bool) -> Set[str]:
-    # C = context
-    
     obj = context.view_layer.objects.active
     if obj is None:
         operator.report({'OPERATOR'}, 'No object selected')
@@ -134,12 +131,11 @@ class ToggleFKIK(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        C = context
-        obj = C.view_layer.objects.active
+        obj = context.view_layer.objects.active
         return (obj is not None) and\
             (obj.pose is not None) and\
             len(selected_bones(obj)) > 0 and\
-            C.mode == 'POSE'
+            context.mode == 'POSE'
 
     def execute(self, context):
         if self.action == 'TOGGLE':
