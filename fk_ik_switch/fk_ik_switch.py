@@ -156,7 +156,6 @@ class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
 
     def draw(self, context: bpy.types.Context):
         layout = self.layout
-        layout.label(text="Test String")
         props = layout.operator(ToggleFKIK.bl_idname, text=ToggleFKIK.bl_label)
         props.action = 'TOGGLE'
         props = layout.operator(ToggleFKIK.bl_idname, text="FK->IK")
