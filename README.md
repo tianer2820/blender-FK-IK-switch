@@ -4,10 +4,11 @@ blender FK IK switch addon
 
 A simple addon to turn on/off IK constraint while keeping the bones in-place.
 
-**currently usable features:**
+## Features
 
 - switch IK to FK while keeping bones in-place
-- adding key frames automatically
+- switch FK to IK, moving IK target and pole to the best fit location
+- auto key frames
   
 ## How to install/use
 
@@ -26,6 +27,5 @@ Or just press f3 and search for the operator "Toggle FK/IK"
 
 ## Todos
 
-- implement fk2ik
 - implement toggle
 - add screenshots
