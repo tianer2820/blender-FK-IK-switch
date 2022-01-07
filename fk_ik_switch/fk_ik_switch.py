@@ -22,7 +22,7 @@ def ik2fk(context: bpy.types.Context, operator: bpy.types.Operator, add_keyframe
         return {"CANCELLED"}
     pose: bpy.types.Pose
 
-    bones = context.selected_pose_bones_from_active_object
+    bones = selected_bones(obj)
 
     if bones is None:
         operator.report({'OPERATOR'}, 'No bone selected')
@@ -83,6 +83,17 @@ def follow_bone_chain(bone: bpy.types.PoseBone, count: int) -> List[bpy.types.Po
     return chain
 
 
+def selected_bones(object: bpy.types.Object) -> List[bpy.types.PoseBone]:
+    if object is None:
+        return None
+    if object.pose is None:
+        return None
+    bones = []
+    for p_bone in object.pose.bones:
+        p_bone: bpy.types.PoseBone
+        if p_bone.bone.select:
+            bones.append(p_bone)
+    return bones
 
 """
 Blender Addon Interface
@@ -127,7 +138,7 @@ class ToggleFKIK(bpy.types.Operator):
         obj = C.view_layer.objects.active
         return (obj is not None) and\
             (obj.pose is not None) and\
-            len(C.selected_pose_bones_from_active_object) > 0 and\
+            len(selected_bones(obj)) > 0 and\
             C.mode == 'POSE'
 
     def execute(self, context):
