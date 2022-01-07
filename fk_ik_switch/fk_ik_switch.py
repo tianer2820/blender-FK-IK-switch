@@ -14,18 +14,18 @@ def ik2fk(context: bpy.types.Context, operator: bpy.types.Operator, add_keyframe
     
     obj = context.view_layer.objects.active
     if obj is None:
-        operator.report('OPERATOR', 'Nothing selected')
+        operator.report({'OPERATOR'}, 'No object selected')
         return {"CANCELLED"}
     pose = obj.pose
     if pose is None:
-        operator.report('OPERATOR', 'Active object does not have pose data')
+        operator.report({'OPERATOR'}, 'Active object does not have pose data')
         return {"CANCELLED"}
     pose: bpy.types.Pose
 
-    bones = C.selected_pose_bones_from_active_object
+    bones = context.selected_pose_bones_from_active_object
 
     if bones is None:
-        operator.report('OPERATOR', 'Nothing selected')
+        operator.report({'OPERATOR'}, 'No bone selected')
         return {"CANCELLED"}
     bones = bones.copy()
 
@@ -140,7 +140,7 @@ class ToggleFKIK(bpy.types.Operator):
         elif self.action == 'IK2FK':
             return ik2fk(context, self, self.insert_keyframe)
         else:
-            self.report('ERROR', "Unknown action type: {}".format(self.action))
+            self.report({'ERROR'}, "Unknown action type: {}".format(self.action))
             return {'CANCELLED'}
 
 
