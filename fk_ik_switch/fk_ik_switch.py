@@ -1,6 +1,6 @@
 import bpy
 from bpy import data as D
-from bpy import context as C
+# from bpy import context as C
 from mathutils import *
 from math import *
 
@@ -11,7 +11,8 @@ utility functions
 """
 def ik2fk(context: bpy.types.Context, operator: bpy.types.Operator, add_keyframe: bool) -> Set[str]:
     # C = context
-    obj = C.active_object
+    
+    obj = context.view_layer.objects.active
     if obj is None:
         operator.report('OPERATOR', 'Nothing selected')
         return {"CANCELLED"}
@@ -47,7 +48,7 @@ def ik2fk(context: bpy.types.Context, operator: bpy.types.Operator, add_keyframe
     bpy.ops.pose.select_all(action='DESELECT')
     for bone in ik_bones:
         bone: bpy.types.PoseBone
-        converted = obj.convert_space(pose_bone=bone, matrix=bone.matrix, from_space='WORLD', to_space='LOCAL')
+        converted = obj.convert_space(pose_bone=bone, matrix=bone.matrix, from_space='POSE', to_space='LOCAL')
         bone.bone.select = True
         current_frame = context.scene.frame_current
         if add_keyframe:
@@ -80,7 +81,6 @@ def follow_bone_chain(bone: bpy.types.PoseBone, count: int) -> List[bpy.types.Po
             break
         print(current)
     return chain
-    
 
 
 
@@ -122,9 +122,9 @@ class ToggleFKIK(bpy.types.Operator):
         default=True)
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: bpy.types.Context):
         C = context
-        obj = C.active_object
+        obj = C.view_layer.objects.active
         return (obj is not None) and\
             (obj.pose is not None) and\
             len(C.selected_pose_bones_from_active_object) > 0 and\
