@@ -26,8 +26,11 @@ bl_info = {
 """
 utility functions/classes
 """
+
+
 class IKChain:
     """A data class representing a bone chain with IK constraint on the tip"""
+
     def __init__(self, bones: List[bpy.types.PoseBone], constraint: bpy.types.KinematicConstraint) -> None:
         self.bones = bones
         self.constraint = constraint
@@ -222,6 +225,8 @@ def ik2fk(obj: bpy.types.Object, ik_chains: List['IKChain'],
 """
 Operators
 """
+
+
 class ToggleFKIK(bpy.types.Operator):
     """Switch IK on/off, keeping bone pose"""
     bl_idname = "pose.toggle_fk_ik"
@@ -230,8 +235,8 @@ class ToggleFKIK(bpy.types.Operator):
 
     _actions = [
         ("TOGGLE", "Toggle", "Toggle FK/IK"),
-        ("FK2IK", "FK -> IK", "Switch on IK"),
-        ("IK2FK", "IK -> FK", "Switch off IK"),
+        ("FK2IK", "FK->IK", "Switch on IK"),
+        ("IK2FK", "IK->FK", "Switch off IK"),
     ]
     action: bpy.props.EnumProperty(
         items=_actions,
@@ -242,6 +247,9 @@ class ToggleFKIK(bpy.types.Operator):
     insert_keyframe: bpy.props.BoolProperty(name="Insert Keyframe",
                                             description="Insert Keyframe for bones and IK constraints",
                                             default=True)
+    force: bpy.props.BoolProperty(name='Force',
+                                  description="Apply the operation regardless of the current IK status of bone chains",
+                                  default=False)
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
@@ -277,10 +285,16 @@ class ToggleFKIK(bpy.types.Operator):
             ik2fk(obj, ik_chains, current_frame, self.insert_keyframe)
             return {'FINISHED'}
         elif self.action == 'FK2IK':
-            fk2ik(obj, fk_chains, current_frame, self.insert_keyframe)
+            if self.force:
+                fk2ik(obj, chains, current_frame, self.insert_keyframe)
+            else:
+                fk2ik(obj, fk_chains, current_frame, self.insert_keyframe)
             return {'FINISHED'}
         elif self.action == 'IK2FK':
-            ik2fk(obj, ik_chains, current_frame, self.insert_keyframe)
+            if self.force:
+                ik2fk(obj, chains, current_frame, self.insert_keyframe)
+            else:
+                ik2fk(obj, ik_chains, current_frame, self.insert_keyframe)
             return {'FINISHED'}
         else:
             self.report(
@@ -313,6 +327,7 @@ class ToggleFKIK(bpy.types.Operator):
 UIs
 """
 
+
 class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -327,10 +342,24 @@ class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
         layout = self.layout
         props = layout.operator(ToggleFKIK.bl_idname, text=ToggleFKIK.bl_label)
         props.action = 'TOGGLE'
-        props = layout.operator(ToggleFKIK.bl_idname, text="FK->IK")
+        props.force = False
+
+        row = layout.row()
+        props = row.operator(ToggleFKIK.bl_idname, text="FK->IK")
         props.action = 'FK2IK'
-        props = layout.operator(ToggleFKIK.bl_idname, text="IK->FK")
+        props.force = False
+        props = row.operator(ToggleFKIK.bl_idname, text="FK->IK(Force)")
+        props.action = 'FK2IK'
+        props.force = True
+
+        row = layout.row()
+        props = row.operator(ToggleFKIK.bl_idname, text="IK->FK")
         props.action = 'IK2FK'
+        props.force = False
+        props = row.operator(ToggleFKIK.bl_idname, text="IK->FK(Force)")
+        props.action = 'IK2FK'
+        props.force = True
+
 
 
 """
