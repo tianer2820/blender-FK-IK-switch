@@ -12,7 +12,7 @@ Blender Addon Info
 bl_info = {
     "name": "FK/IK Switch",
     "author": "tianer2820",
-    "version": (0, 1),
+    "version": (1, 0),
     "blender": (2, 80, 0),
     "location": "View3D > Pose Mode Side Panel > FK/IK Switch",
     "description": "Switch on/off IK constraints while keeping bones in-place",
@@ -244,8 +244,8 @@ class ToggleFKIK(bpy.types.Operator):
         description="The action to perform",
         default="TOGGLE")
 
-    insert_keyframe: bpy.props.BoolProperty(name="Insert Keyframe",
-                                            description="Insert Keyframe for bones and IK constraints",
+    insert_keyframe: bpy.props.BoolProperty(name="Insert Keyframes",
+                                            description="Insert Keyframes for bones and IK constraints",
                                             default=True)
     force: bpy.props.BoolProperty(name='Force',
                                   description="Apply the operation regardless of the current IK status of bone chains",
@@ -288,12 +288,16 @@ class ToggleFKIK(bpy.types.Operator):
             if self.force:
                 fk2ik(obj, chains, current_frame, self.insert_keyframe)
             else:
+                if len(fk_chains) == 0:
+                    return {"CANCELLED"}
                 fk2ik(obj, fk_chains, current_frame, self.insert_keyframe)
             return {'FINISHED'}
         elif self.action == 'IK2FK':
             if self.force:
                 ik2fk(obj, chains, current_frame, self.insert_keyframe)
             else:
+                if len(ik_chains) == 0:
+                    return {"CANCELLED"}
                 ik2fk(obj, ik_chains, current_frame, self.insert_keyframe)
             return {'FINISHED'}
         else:
@@ -344,7 +348,7 @@ class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
         props.action = 'TOGGLE'
         props.force = False
 
-        row = layout.row()
+        row = layout.row(align=False)
         props = row.operator(ToggleFKIK.bl_idname, text="FK->IK")
         props.action = 'FK2IK'
         props.force = False
@@ -352,7 +356,7 @@ class VIEW3D_PT_animation_fkik_switch(bpy.types.Panel):
         props.action = 'FK2IK'
         props.force = True
 
-        row = layout.row()
+        row = layout.row(align=False)
         props = row.operator(ToggleFKIK.bl_idname, text="IK->FK")
         props.action = 'IK2FK'
         props.force = False
